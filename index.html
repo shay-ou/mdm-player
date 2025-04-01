@@ -1,0 +1,596 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Harmony Player</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --primary: #6c5ce7;
+            --secondary: #a29bfe;
+            --dark: #2d3436;
+            --light: #f8f9fa;
+            --accent: #fd79a8;
+            --text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Poppins', sans-serif;
+        }
+
+        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap');
+
+        body {
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            background: linear-gradient(135deg, #000000 0%, #965ece 100%);
+            background-attachment: fixed;
+            color: var(--light);
+            overflow-x: hidden;
+        }
+
+        .particles {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            pointer-events: none;
+        }
+
+        .player {
+            width: 90%;
+            max-width: 420px;
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(15px);
+            -webkit-backdrop-filter: blur(15px);
+            border-radius: 25px;
+            padding: 30px;
+            box-shadow: 0 25px 45px rgba(0, 0, 0, 0.25);
+            text-align: center;
+            overflow: hidden;
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            z-index: 10;
+        }
+
+        .player:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 30px 50px rgba(0, 0, 0, 0.35);
+        }
+
+        h1 {
+            margin-bottom: 20px;
+            font-weight: 700;
+            font-size: 2rem;
+            text-shadow: var(--text-shadow);
+            letter-spacing: 1px;
+        }
+
+        .song-info {
+            margin-bottom: 20px;
+        }
+
+        .song-title {
+            font-size: 1.3rem;
+            font-weight: 600;
+            margin-bottom: 5px;
+            text-shadow: var(--text-shadow);
+        }
+
+        .artist {
+            font-size: 0.9rem;
+            opacity: 0.8;
+            text-shadow: var(--text-shadow);
+        }
+
+        #albumImage {
+            width: 100%;
+            height: 250px;
+            object-fit: cover;
+            border-radius: 15px;
+            margin-bottom: 25px;
+            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.3);
+            transition: all 0.3s ease;
+            border: 3px solid rgba(255, 255, 255, 0.3);
+            transform-style: preserve-3d;
+        }
+
+        #albumImage:hover {
+            transform: scale(1.02) rotateY(5deg);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
+        }
+
+        #audioPlayer {
+            display: none;
+        }
+
+        .progress-container {
+            width: 100%;
+            height: 8px;
+            background-color: rgba(255, 255, 255, 0.2);
+            border-radius: 10px;
+            margin-bottom: 15px;
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+        }
+
+        #progress {
+            height: 100%;
+            background: linear-gradient(90deg, var(--primary), var(--accent));
+            border-radius: 10px;
+            width: 0%;
+            transition: width 0.1s linear;
+            position: relative;
+        }
+
+        #progress::after {
+            content: '';
+            position: absolute;
+            right: 0;
+            top: -3px;
+            width: 15px;
+            height: 15px;
+            background: white;
+            border-radius: 50%;
+            transform: translateX(50%);
+            opacity: 0;
+            transition: opacity 0.2s;
+        }
+
+        .progress-container:hover #progress::after {
+            opacity: 1;
+        }
+
+        .time-info {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 25px;
+            font-size: 0.9rem;
+            color: rgba(255, 255, 255, 0.9);
+            text-shadow: var(--text-shadow);
+        }
+
+        #playerControls {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .control-btn {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background-color: rgba(255, 255, 255, 0.15);
+            color: white;
+            border: none;
+            cursor: pointer;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 1.2rem;
+            transition: all 0.3s ease;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+            backdrop-filter: blur(5px);
+        }
+
+        .control-btn:hover {
+            background-color: rgba(255, 255, 255, 0.25);
+            transform: scale(1.1);
+        }
+
+        .control-btn:active {
+            transform: scale(0.95);
+        }
+
+        #playPause {
+            width: 70px;
+            height: 70px;
+            font-size: 1.8rem;
+            background: linear-gradient(135deg, var(--primary), var(--accent));
+        }
+
+        #playPause:hover {
+            background: linear-gradient(135deg, #5649c0, #f85b9a);
+            transform: scale(1.1);
+        }
+
+        .secondary-controls {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin-top: 15px;
+        }
+
+        .mode-btn {
+            padding: 8px 15px;
+            background-color: rgba(255, 255, 255, 0.1);
+            color: white;
+            border: none;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 0.8rem;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .mode-btn.active {
+            background-color: var(--primary);
+            box-shadow: 0 0 15px rgba(20, 19, 24, 0.5);
+        }
+
+        .mode-btn:hover {
+            background-color: rgba(255, 255, 255, 0.2);
+        }
+
+        .visualizer {
+            width: 100%;
+            height: 60px;
+            display: flex;
+            justify-content: center;
+            align-items: flex-end;
+            gap: 3px;
+            margin-top: 20px;
+        }
+
+        .bar {
+            width: 5px;
+            background: linear-gradient(to top, var(--primary), var(--accent));
+            border-radius: 3px;
+            transition: height 0.2s ease;
+        }
+
+        @media (max-width: 480px) {
+            .player {
+                width: 95%;
+                padding: 20px;
+            }
+
+            #albumImage {
+                height: 200px;
+            }
+
+            #playPause {
+                width: 60px;
+                height: 60px;
+                font-size: 1.5rem;
+            }
+        }
+
+        /* Animation for visualizer bars */
+        @keyframes pulse {
+
+            0%,
+            100% {
+                transform: scaleY(1);
+            }
+
+            50% {
+                transform: scaleY(1.5);
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="particles" id="particles-js"></div>
+
+    <div class="player">
+        <h1>Harmony Player</h1>
+
+        <div class="song-info">
+            <div class="song-title" id="songTitle">Loading...</div>
+            <div class="artist" id="artist">Artist</div>
+        </div>
+
+        <div id="imageContainer">
+            <img id="albumImage"
+                src="https://images.unsplash.com/photo-1496293455970-f8581aae0e3b?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1000&q=80"
+                alt="Album Art">
+        </div>
+
+        <div class="progress-container" id="progressContainer">
+            <div id="progress"></div>
+        </div>
+
+        <div class="time-info">
+            <span id="currentTime">0:00</span>
+            <span id="duration">0:00</span>
+        </div>
+
+        <audio id="audioPlayer"></audio>
+
+        <div id="playerControls">
+            <button id="shuffle" class="control-btn" title="Shuffle"><i class="fas fa-random"></i></button>
+            <button id="prev" class="control-btn" title="Previous"><i class="fas fa-step-backward"></i></button>
+            <button id="playPause" class="control-btn" title="Play/Pause"><i class="fas fa-play"></i></button>
+            <button id="next" class="control-btn" title="Next"><i class="fas fa-step-forward"></i></button>
+            <button id="repeat" class="control-btn" title="Repeat"><i class="fas fa-redo"></i></button>
+        </div>
+
+        <div class="secondary-controls">
+            <button id="loop" class="mode-btn" title="Loop">
+                <i class="fas fa-infinity"></i> Loop
+            </button>
+            <button id="queue" class="mode-btn" title="Queue">
+                <i class="fas fa-list-ol"></i> Queue
+            </button>
+        </div>
+
+        <div class="visualizer" id="visualizer">
+            <!-- Bars will be generated by JavaScript -->
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/particles.js/2.0.0/particles.min.js"></script>
+    <script>
+        // Initialize particles.js background
+        particlesJS("particles-js", {
+            particles: {
+                number: { value: 60, density: { enable: true, value_area: 800 } },
+                color: { value: "#ffffff" },
+                shape: { type: "circle" },
+                opacity: { value: 0.5, random: true },
+                size: { value: 3, random: true },
+                line_linked: { enable: true, distance: 150, color: "#ffffff", opacity: 0.3, width: 1 },
+                move: { enable: true, speed: 2, direction: "none", random: true, straight: false, out_mode: "out" }
+            },
+            interactivity: {
+                detect_on: "canvas",
+                events: {
+                    onhover: { enable: true, mode: "repulse" },
+                    onclick: { enable: true, mode: "push" }
+                }
+            }
+        });
+
+        // Audio Player Functionality
+        const audioPlayer = document.getElementById("audioPlayer");
+        const playPauseButton = document.getElementById("playPause");
+        const nextButton = document.getElementById("next");
+        const prevButton = document.getElementById("prev");
+        const albumImage = document.getElementById("albumImage");
+        const progress = document.getElementById("progress");
+        const progressContainer = document.querySelector(".progress-container");
+        const currentTimeEl = document.getElementById("currentTime");
+        const durationEl = document.getElementById("duration");
+        const songTitleEl = document.getElementById("songTitle");
+        const artistEl = document.getElementById("artist");
+        const shuffleButton = document.getElementById("shuffle");
+        const repeatButton = document.getElementById("repeat");
+        const loopButton = document.getElementById("loop");
+        const queueButton = document.getElementById("queue");
+        const visualizer = document.getElementById("visualizer");
+
+        // Create visualizer bars
+        for (let i = 0; i < 50; i++) {
+            const bar = document.createElement("div");
+            bar.className = "bar";
+            bar.style.height = `${Math.random() * 40 + 10}px`;
+            bar.style.animation = `pulse ${Math.random() * 0.5 + 0.3}s infinite alternate ${Math.random() * 0.5}s`;
+            visualizer.appendChild(bar);
+        }
+
+        const bars = document.querySelectorAll(".bar");
+
+        // Extended playlist with more songs
+        const playlist = [
+            {
+                title: "Chamber of Reflections",
+                artist: "Mac Demarco",
+                audio: "./audio/song1.mp3",
+                image: "https://i.pinimg.com/736x/28/2f/02/282f02b38f08fd74e6b654e4fb856b33.jpg"
+            },
+            {
+                title: "Heart to heart",
+                artist: "Mac Demarco",
+                audio: "./audio/song2.mp3",
+                image: "https://i.pinimg.com/736x/22/84/8a/22848a4bf5a0d74d6329827b91fc4afd.jpg"
+            },
+            {
+                title: "My Kind of Woman",
+                artist: "Mac Demarco",
+                audio: "./audio/song3.mp3",
+                image: "https://i.pinimg.com/736x/44/0f/6c/440f6cd46b7baeb98bd8cff3a28e2fc4.jpg"
+            },
+            {
+                title: "For the First Time",
+                artist: "Mac Demarco",
+                audio: "./audio/song4.mp3",
+                image: "https://i.pinimg.com/474x/10/2f/81/102f817a4b666523a36e19c01446af28.jpg"
+            },
+            {
+                title: "Freaking out the neighbourhood",
+                artist: "Mac Demarco",
+                audio: "./audio/song5.mp3",
+                image: "https://i.pinimg.com/474x/e3/d8/50/e3d850099367fdc48f8148dc3f11ee46.jpg"
+
+            },
+            {
+                title: "No other Heart",
+                artist: "Mac Demarco",
+                audio: "./audio/song6.mp3",
+                image: "https://images.unsplash.com/photo-1448375240586-882707db888b?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1000&q=80"
+            },
+
+        ];
+
+        let currentTrackIndex = 0;
+        let isShuffled = false;
+        let isLooping = false;
+        let isRepeating = false;
+        let originalPlaylist = [...playlist];
+        let audioContext;
+        let analyser;
+        let dataArray;
+        let source;
+
+        // Initialize audio context for visualizer
+        function initAudioContext() {
+            audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            analyser = audioContext.createAnalyser();
+            source = audioContext.createMediaElementSource(audioPlayer);
+            source.connect(analyser);
+            analyser.connect(audioContext.destination);
+            analyser.fftSize = 256;
+
+            const bufferLength = analyser.frequencyBinCount;
+            dataArray = new Uint8Array(bufferLength);
+
+            function updateVisualizer() {
+                requestAnimationFrame(updateVisualizer);
+                analyser.getByteFrequencyData(dataArray);
+
+                for (let i = 0; i < bars.length; i++) {
+                    const index = Math.floor(i * (dataArray.length / bars.length));
+                    const height = dataArray[index] / 2;
+                    bars[i].style.height = `${height}px`;
+                }
+            }
+
+            updateVisualizer();
+        }
+
+        function formatTime(seconds) {
+            const minutes = Math.floor(seconds / 60);
+            seconds = Math.floor(seconds % 60);
+            return `${minutes}:${seconds < 10 ? '0' : ''}${seconds}`;
+        }
+
+        function updateProgress() {
+            const { duration, currentTime } = audioPlayer;
+            const progressPercent = (currentTime / duration) * 100;
+            progress.style.width = `${progressPercent}%`;
+            currentTimeEl.textContent = formatTime(currentTime);
+        }
+
+        function setProgress(e) {
+            const width = this.clientWidth;
+            const clickX = e.offsetX;
+            const duration = audioPlayer.duration;
+            audioPlayer.currentTime = (clickX / width) * duration;
+        }
+
+        function updateDuration() {
+            durationEl.textContent = formatTime(audioPlayer.duration);
+        }
+
+        function togglePlay() {
+            if (audioPlayer.paused) {
+                audioPlayer.play()
+                    .then(() => {
+                        playPauseButton.innerHTML = '<i class="fas fa-pause"></i>';
+                        if (!audioContext) initAudioContext();
+                    })
+                    .catch(error => {
+                        console.log("Playback prevented:", error);
+                    });
+            } else {
+                audioPlayer.pause();
+                playPauseButton.innerHTML = '<i class="fas fa-play"></i>';
+            }
+        }
+
+        function nextTrack() {
+            if (isShuffled) {
+                currentTrackIndex = Math.floor(Math.random() * playlist.length);
+            } else {
+                currentTrackIndex = (currentTrackIndex + 1) % playlist.length;
+            }
+            loadTrack(currentTrackIndex);
+        }
+
+        function prevTrack() {
+            if (isShuffled) {
+                currentTrackIndex = Math.floor(Math.random() * playlist.length);
+            } else {
+                currentTrackIndex = (currentTrackIndex - 1 + playlist.length) % playlist.length;
+            }
+            loadTrack(currentTrackIndex);
+        }
+
+        function loadTrack(index) {
+            const track = playlist[index];
+            audioPlayer.src = track.audio;
+            albumImage.src = track.image;
+            songTitleEl.textContent = track.title;
+            artistEl.textContent = track.artist;
+
+            audioPlayer.play()
+                .then(() => {
+                    playPauseButton.innerHTML = '<i class="fas fa-pause"></i>';
+                    if (!audioContext) initAudioContext();
+                })
+                .catch(error => {
+                    console.log("Auto-play prevented:", error);
+                });
+        }
+
+        function toggleShuffle() {
+            isShuffled = !isShuffled;
+            shuffleButton.style.backgroundColor = isShuffled ? 'var(--primary)' : 'rgba(255, 255, 255, 0.15)';
+
+            if (isShuffled) {
+                // Shuffle the playlist
+                for (let i = playlist.length - 1; i > 0; i--) {
+                    const j = Math.floor(Math.random() * (i + 1));
+                    [playlist[i], playlist[j]] = [playlist[j], playlist[i]];
+                }
+            } else {
+                // Restore original order
+                playlist = [...originalPlaylist];
+            }
+        }
+
+        function toggleLoop() {
+            isLooping = !isLooping;
+            loopButton.classList.toggle('active');
+            audioPlayer.loop = isLooping;
+        }
+
+        function toggleRepeat() {
+            isRepeating = !isRepeating;
+            repeatButton.style.backgroundColor = isRepeating ? 'var(--primary)' : 'rgba(255, 255, 255, 0.15)';
+        }
+
+        // Event listeners
+        playPauseButton.addEventListener("click", togglePlay);
+        nextButton.addEventListener("click", nextTrack);
+        prevButton.addEventListener("click", prevTrack);
+        audioPlayer.addEventListener("timeupdate", updateProgress);
+        audioPlayer.addEventListener("loadedmetadata", updateDuration);
+        progressContainer.addEventListener("click", setProgress);
+        shuffleButton.addEventListener("click", toggleShuffle);
+        loopButton.addEventListener("click", toggleLoop);
+        repeatButton.addEventListener("click", toggleRepeat);
+
+        audioPlayer.addEventListener("ended", () => {
+            if (isRepeating) {
+                audioPlayer.currentTime = 0;
+                audioPlayer.play();
+            } else {
+                nextTrack();
+            }
+        });
+
+        // Initial track load
+        loadTrack(currentTrackIndex);
+    </script>
+</body>
+
+</html>
